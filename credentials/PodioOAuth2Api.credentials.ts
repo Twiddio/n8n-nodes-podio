@@ -1,15 +1,15 @@
 import type { Icon, ICredentialType, INodeProperties } from 'n8n-workflow';
 
-export class GithubIssuesOAuth2Api implements ICredentialType {
-	name = 'githubIssuesOAuth2Api';
+export class PodioOAuth2Api implements ICredentialType {
+	name = 'podioOAuth2Api';
 
 	extends = ['oAuth2Api'];
 
-	displayName = 'GitHub Issues OAuth2 API';
+	displayName = 'Podio OAuth2 API';
 
-	icon: Icon = { light: 'file:../icons/github.svg', dark: 'file:../icons/github.dark.svg' };
+	icon: Icon = { light: 'file:../icons/podio.svg', dark: 'file:../icons/podio.dark.svg' };
 
-	documentationUrl = 'https://docs.github.com/en/apps/oauth-apps';
+	documentationUrl = 'https://developers.podio.com/doc/authentication';
 
 	properties: INodeProperties[] = [
 		{
@@ -22,21 +22,21 @@ export class GithubIssuesOAuth2Api implements ICredentialType {
 			displayName: 'Authorization URL',
 			name: 'authUrl',
 			type: 'hidden',
-			default: 'https://github.com/login/oauth/authorize',
+			default: 'https://podio.com/oauth/authorize',
 			required: true,
 		},
 		{
 			displayName: 'Access Token URL',
 			name: 'accessTokenUrl',
 			type: 'hidden',
-			default: 'https://github.com/login/oauth/access_token',
+			default: 'https://podio.com/oauth/token',
 			required: true,
 		},
 		{
 			displayName: 'Scope',
 			name: 'scope',
 			type: 'hidden',
-			default: 'repo',
+			default: 'app.read:app app.write:app item.read:app item.write:app task.read:task task.write:task',
 		},
 		{
 			displayName: 'Auth URI Query Parameters',
@@ -52,3 +52,4 @@ export class GithubIssuesOAuth2Api implements ICredentialType {
 		},
 	];
 }
+

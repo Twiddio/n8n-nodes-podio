@@ -1,0 +1,19 @@
+{
+	"node": "n8n-nodes-podio",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Productivity", "CRM"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://developers.podio.com/doc/authentication"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://developers.podio.com/doc"
+			}
+		]
+	}
+}
+

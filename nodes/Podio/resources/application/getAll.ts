@@ -1,31 +1,40 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { parseLinkHeader } from '../../shared/utils';
+import { workspaceSelect } from '../../shared/descriptions';
 
-const showOnlyForIssueCommentGetMany = {
+const showOnlyForApplicationGetMany = {
 	operation: ['getAll'],
-	resource: ['issueComment'],
+	resource: ['application'],
 };
 
-export const issueCommentGetManyDescription: INodeProperties[] = [
+export const applicationGetManyDescription: INodeProperties[] = [
+	{
+		...workspaceSelect,
+		displayName: 'Workspace',
+		name: 'workspaceId',
+		required: true,
+		displayOptions: {
+			show: showOnlyForApplicationGetMany,
+		},
+	},
 	{
 		displayName: 'Limit',
 		name: 'limit',
 		type: 'number',
 		displayOptions: {
 			show: {
-				...showOnlyForIssueCommentGetMany,
+				...showOnlyForApplicationGetMany,
 				returnAll: [false],
 			},
 		},
 		typeOptions: {
 			minValue: 1,
-			maxValue: 100,
+			maxValue: 500,
 		},
 		default: 50,
 		routing: {
 			send: {
 				type: 'query',
-				property: 'per_page',
+				property: 'limit',
 			},
 			output: {
 				maxResults: '={{$value}}',
@@ -38,7 +47,7 @@ export const issueCommentGetManyDescription: INodeProperties[] = [
 		name: 'returnAll',
 		type: 'boolean',
 		displayOptions: {
-			show: showOnlyForIssueCommentGetMany,
+			show: showOnlyForApplicationGetMany,
 		},
 		default: false,
 		description: 'Whether to return all results or only up to a given limit',
@@ -46,16 +55,19 @@ export const issueCommentGetManyDescription: INodeProperties[] = [
 			send: {
 				paginate: '={{ $value }}',
 				type: 'query',
-				property: 'per_page',
-				value: '100',
+				property: 'limit',
+				value: '500',
 			},
 			operations: {
 				pagination: {
 					type: 'generic',
 					properties: {
-						continue: `={{ !!(${parseLinkHeader.toString()})($response.headers?.link).next }}`,
+						continue: '={{ $response.body.length === 500 }}',
 						request: {
-							url: `={{ (${parseLinkHeader.toString()})($response.headers?.link)?.next ?? $request.url }}`,
+							url: '={{ $request.url }}',
+							qs: {
+								offset: '={{ $response.body.length * ($page + 1) }}',
+							},
 						},
 					},
 				},
@@ -63,3 +75,4 @@ export const issueCommentGetManyDescription: INodeProperties[] = [
 		},
 	},
 ];
+
