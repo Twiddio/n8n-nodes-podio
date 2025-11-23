@@ -5,16 +5,17 @@ import type {
 } from 'n8n-workflow';
 import { podioApiRequest } from '../shared/authentication';
 
-type Item = {
-	item_id: number;
-	title?: string;
+type Field = {
+	field_id: number;
+	label: string;
+	type?: string;
 };
 
-type ItemsResponse = {
-	items: Item[];
+type ApplicationResponse = {
+	fields?: Field[];
 };
 
-export async function getItems(
+export async function getFields(
 	this: ILoadOptionsFunctions,
 	filter?: string,
 ): Promise<INodeListSearchResult> {
@@ -56,27 +57,27 @@ export async function getItems(
 			return { results: [] };
 		}
 
+		// Fetch application details which includes fields
 		const response = await podioApiRequest.call(this, {
 			method: 'GET',
-			url: `https://api.podio.com/item/app/${appIdStr}/`,
-			qs: {
-				limit: 100,
-			},
+			url: `https://api.podio.com/app/${appIdStr}`,
 		});
 
-		const itemsResponse: ItemsResponse = response || { items: [] };
-		let items: Item[] = itemsResponse.items || [];
+		const appResponse: ApplicationResponse = response || {};
+		let fields: Field[] = appResponse.fields || [];
 
+		// Filter fields if needed
 		if (filter) {
-			items = items.filter((item: Item) => {
-				const title = item.title || `Item ${item.item_id}`;
-				return title.toLowerCase().includes(filter.toLowerCase());
+			fields = fields.filter((field: Field) => {
+				const label = field.label || `Field ${field.field_id}`;
+				return label.toLowerCase().includes(filter.toLowerCase());
 			});
 		}
 
-		const results: INodeListSearchItems[] = items.map((item: Item) => ({
-			name: item.title || `Item ${item.item_id}`,
-			value: item.item_id.toString(),
+		// Map to results
+		const results: INodeListSearchItems[] = fields.map((field: Field) => ({
+			name: field.label || `Field ${field.field_id}`,
+			value: field.field_id.toString(),
 		}));
 
 		return { results };
@@ -85,7 +86,7 @@ export async function getItems(
 		// This prevents the dropdown from breaking completely
 		const errorMessage = error.message || String(error);
 		if (!errorMessage.includes('posthog')) {
-			console.error('Error fetching items:', errorMessage);
+			console.error('Error fetching fields:', errorMessage);
 		}
 		return { results: [] };
 	}

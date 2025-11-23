@@ -29,24 +29,46 @@ export const itemCreateDescription: INodeProperties[] = [
 		default: {},
 		placeholder: 'Add Field',
 		description: 'Fields to set for the item',
-		routing: {
-			send: {
-				type: 'body',
-				property: 'fields',
-				value: '={{$value.field.map((f: any) => ({ field_id: f.field_id, values: [f.value] }))}}',
-			},
-		},
 		options: [
 			{
 				displayName: 'Field',
 				name: 'field',
 				values: [
 					{
-						displayName: 'Field ID',
+						displayName: 'Field',
 						name: 'field_id',
-						type: 'number',
-						default: 0,
-						description: 'The field ID',
+						type: 'resourceLocator',
+						default: { mode: 'list', value: '' },
+						required: true,
+						modes: [
+							{
+								displayName: 'Field',
+								name: 'list',
+								type: 'list',
+								placeholder: 'Select a field...',
+								typeOptions: {
+									searchListMethod: 'getFields',
+									searchable: true,
+									searchFilterRequired: false,
+								},
+							},
+							{
+								displayName: 'By ID',
+								name: 'id',
+								type: 'string',
+								placeholder: 'e.g. 123456',
+								validation: [
+									{
+										type: 'regex',
+										properties: {
+											regex: '[0-9]+',
+											errorMessage: 'Not a valid Field ID',
+										},
+									},
+								],
+							},
+						],
+						description: 'The field to set',
 					},
 					{
 						displayName: 'Value',

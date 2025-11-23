@@ -35,28 +35,21 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ## Credentials
 
-This node uses OAuth 2.0 authentication. To set up credentials:
+This node uses Username & Password authentication as described in the [Podio Username & Password authentication documentation](https://developers.podio.com/authentication/username_password).
 
-1. **Create a Podio App**:
+To set up credentials:
+
+1. **Get your API credentials**:
    - Log in to your Podio account
    - Go to Settings → Developer → API
-   - Click "Create API Key" or "Register OAuth App"
    - Note your Client ID and Client Secret
 
-2. **Configure OAuth in n8n**:
-   - In n8n, add Podio credentials
-   - Enter your Client ID and Client Secret
-   - Complete the OAuth flow to authorize n8n to access your Podio account
+2. **Configure credentials in n8n**:
+   - In n8n, add Podio Username & Password API credentials
+   - Enter your Client ID, Client Secret, Username (email), and Password
+   - Click "Test" to verify your credentials are working correctly
 
-The OAuth scopes included are:
-- `app.read:app` - Read applications
-- `app.write:app` - Write applications
-- `item.read:app` - Read items
-- `item.write:app` - Write items
-- `task.read:task` - Read tasks
-- `task.write:task` - Write tasks
-
-For more information, see the [Podio API Authentication documentation](https://developers.podio.com/doc/authentication).
+For more information, see the [Podio API Authentication documentation](https://developers.podio.com/doc/authentication) and [Username & Password flow](https://developers.podio.com/authentication/username_password).
 
 ## Compatibility
 

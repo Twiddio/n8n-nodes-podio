@@ -1,5 +1,4 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { workspaceSelect } from '../../shared/descriptions';
 
 const showOnlyForApplicationGetMany = {
 	operation: ['getAll'],
@@ -7,15 +6,6 @@ const showOnlyForApplicationGetMany = {
 };
 
 export const applicationGetManyDescription: INodeProperties[] = [
-	{
-		...workspaceSelect,
-		displayName: 'Workspace',
-		name: 'workspaceId',
-		required: true,
-		displayOptions: {
-			show: showOnlyForApplicationGetMany,
-		},
-	},
 	{
 		displayName: 'Limit',
 		name: 'limit',
@@ -28,9 +18,8 @@ export const applicationGetManyDescription: INodeProperties[] = [
 		},
 		typeOptions: {
 			minValue: 1,
-			maxValue: 500,
 		},
-		default: 50,
+		default: 4,
 		routing: {
 			send: {
 				type: 'query',
@@ -40,7 +29,7 @@ export const applicationGetManyDescription: INodeProperties[] = [
 				maxResults: '={{$value}}',
 			},
 		},
-		description: 'Max number of results to return',
+		description: 'The maximum number of apps to return. Default: 4',
 	},
 	{
 		displayName: 'Return All',
@@ -62,17 +51,132 @@ export const applicationGetManyDescription: INodeProperties[] = [
 				pagination: {
 					type: 'generic',
 					properties: {
-						continue: '={{ $response.body.length === 500 }}',
+						continue: '={{ $response.body && Array.isArray($response.body) && $response.body.length === 500 }}',
 						request: {
 							url: '={{ $request.url }}',
 							qs: {
-								offset: '={{ $response.body.length * ($page + 1) }}',
+								limit: '={{ 500 }}',
 							},
 						},
 					},
 				},
 			},
 		},
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: showOnlyForApplicationGetMany,
+		},
+		options: [
+			{
+				displayName: 'Exclude App IDs',
+				name: 'exclude_app_ids',
+				type: 'string',
+				default: '',
+				description: 'Comma separated list of app IDs to exclude from the returned list',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'exclude_app_ids',
+					},
+				},
+			},
+			{
+				displayName: 'Exclude Demo',
+				name: 'exclude_demo',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to exclude apps from demo workspace',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'exclude_demo',
+					},
+				},
+			},
+			{
+				displayName: 'Order',
+				name: 'order',
+				type: 'options',
+				options: [
+					{
+						name: 'Score',
+						value: 'score',
+						description: 'Order by the score of the app for the active user',
+					},
+					{
+						name: 'Name',
+						value: 'name',
+						description: 'Order by the name of the app',
+					},
+				],
+				default: 'score',
+				description: 'The order to return the apps in',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'order',
+					},
+				},
+			},
+			{
+				displayName: 'Referenceable in Organization',
+				name: 'referenceable_in_org',
+				type: 'string',
+				default: '',
+				description: 'ID of the Organization to filter apps by. Returns only apps the user can reference in that Organization',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'referenceable_in_org',
+					},
+				},
+			},
+			{
+				displayName: 'Right',
+				name: 'right',
+				type: 'string',
+				default: '',
+				description: 'The right the user must have on the returned apps',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'right',
+					},
+				},
+			},
+			{
+				displayName: 'Target Space ID',
+				name: 'target_space_id',
+				type: 'string',
+				default: '',
+				description: 'The ID of the space we prefer the apps to come from. This will usually be the users current workspace',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'target_space_id',
+					},
+				},
+			},
+			{
+				displayName: 'Text',
+				name: 'text',
+				type: 'string',
+				default: '',
+				description: 'Search term that should match the name of the app, the name of items in the app, or the name of the workspace the app is in',
+				routing: {
+					send: {
+						type: 'query',
+						property: 'text',
+					},
+				},
+			},
+		],
 	},
 ];
 

@@ -53,3 +53,5 @@ export class PodioOAuth2Api implements ICredentialType {
 	];
 }
 
+export default PodioOAuth2Api;
+

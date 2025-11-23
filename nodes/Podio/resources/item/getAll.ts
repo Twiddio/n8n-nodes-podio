@@ -31,15 +31,6 @@ export const itemGetManyDescription: INodeProperties[] = [
 			maxValue: 500,
 		},
 		default: 50,
-		routing: {
-			send: {
-				type: 'query',
-				property: 'limit',
-			},
-			output: {
-				maxResults: '={{$value}}',
-			},
-		},
 		description: 'Max number of results to return',
 	},
 	{
@@ -51,28 +42,6 @@ export const itemGetManyDescription: INodeProperties[] = [
 		},
 		default: false,
 		description: 'Whether to return all results or only up to a given limit',
-		routing: {
-			send: {
-				paginate: '={{ $value }}',
-				type: 'query',
-				property: 'limit',
-				value: '500',
-			},
-			operations: {
-				pagination: {
-					type: 'generic',
-					properties: {
-						continue: '={{ $response.body.items && $response.body.items.length === 500 }}',
-						request: {
-							url: '={{ $request.url }}',
-							qs: {
-								offset: '={{ ($response.body.items || []).length * ($page + 1) }}',
-							},
-						},
-					},
-				},
-			},
-		},
 	},
 	{
 		displayName: 'Filters',
@@ -106,13 +75,6 @@ export const itemGetManyDescription: INodeProperties[] = [
 				],
 				default: 'created_on',
 				description: 'Field to sort by',
-				routing: {
-					request: {
-						qs: {
-							sort_by: '={{$value}}',
-						},
-					},
-				},
 			},
 			{
 				displayName: 'Sort Order',
@@ -130,13 +92,6 @@ export const itemGetManyDescription: INodeProperties[] = [
 				],
 				default: false,
 				description: 'Sort order',
-				routing: {
-					request: {
-						qs: {
-							sort_desc: '={{$value}}',
-						},
-					},
-				},
 			},
 		],
 	},

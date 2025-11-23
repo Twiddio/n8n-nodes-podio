@@ -20,25 +20,13 @@ export const applicationDescription: INodeProperties[] = [
 				name: 'Get Many',
 				value: 'getAll',
 				action: 'Get many applications',
-				description: 'Get many applications',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/app/space/{{$parameter.workspaceId}}/',
-					},
-				},
+				description: 'Get all apps for the active user',
 			},
 			{
 				name: 'Get',
 				value: 'get',
 				action: 'Get an application',
 				description: 'Get the data of a single application',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/app/{{$parameter.applicationId}}',
-					},
-				},
 			},
 		],
 		default: 'getAll',
@@ -46,4 +34,3 @@ export const applicationDescription: INodeProperties[] = [
 	...applicationGetManyDescription,
 	...applicationGetDescription,
 ];
-

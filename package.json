@@ -31,7 +31,7 @@
 		"n8nNodesApiVersion": 1,
 		"strict": true,
 		"credentials": [
-			"dist/credentials/PodioOAuth2Api.credentials.js"
+			"dist/credentials/PodioUsernamePasswordApi.credentials.js"
 		],
 		"nodes": [
 			"dist/nodes/Podio/Podio.node.js"

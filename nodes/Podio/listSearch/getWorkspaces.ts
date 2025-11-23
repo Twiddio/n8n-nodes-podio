@@ -3,6 +3,7 @@ import type {
 	INodeListSearchItems,
 	INodeListSearchResult,
 } from 'n8n-workflow';
+import { podioApiRequest } from '../shared/authentication';
 
 type Workspace = {
 	workspace_id: number;
@@ -13,14 +14,10 @@ export async function getWorkspaces(
 	this: ILoadOptionsFunctions,
 	filter?: string,
 ): Promise<INodeListSearchResult> {
-	const response = await this.helpers.httpRequestWithAuthentication.call(
-		this,
-		'podioOAuth2Api',
-		{
-			method: 'GET',
-			url: 'https://api.podio.com/workspace/',
-		},
-	);
+	const response = await podioApiRequest.call(this, {
+		method: 'GET',
+		url: 'https://api.podio.com/workspace/',
+	});
 
 	let workspaces: Workspace[] = response || [];
 
