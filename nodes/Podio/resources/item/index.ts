@@ -2,6 +2,7 @@ import type { INodeProperties } from 'n8n-workflow';
 import { itemGetManyDescription } from './getAll';
 import { itemGetDescription } from './get';
 import { itemCreateDescription } from './create';
+import { itemSearchDescription } from './search';
 
 const showOnlyForItems = {
 	resource: ['item'],
@@ -35,11 +36,18 @@ export const itemDescription: INodeProperties[] = [
 				action: 'Create an item',
 				description: 'Create a new item',
 			},
+			{
+				name: 'Search',
+				value: 'search',
+				action: 'Search items',
+				description: 'Search and filter items using advanced criteria',
+			},
 		],
 		default: 'getAll',
 	},
 	...itemGetManyDescription,
 	...itemGetDescription,
 	...itemCreateDescription,
+	...itemSearchDescription,
 ];
 

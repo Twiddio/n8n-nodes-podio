@@ -263,6 +263,195 @@ export class Podio implements INodeType {
 			return [returnData];
 		}
 
+		// Handle search items operation with authentication
+		if (resource === 'item' && operation === 'search') {
+			// Get the appId parameter - it may be a resourceLocator object
+			const appIdParam = this.getNodeParameter('appId', 0, { extractValue: true }) as
+				| string
+				| number
+				| { __rl?: boolean; value?: string | number; mode?: string }
+				| undefined;
+
+			// Extract the actual ID value from resourceLocator format
+			let appId: string | number | undefined;
+			if (typeof appIdParam === 'object' && appIdParam !== null) {
+				// Handle resourceLocator format: { __rl: true, value: "123", mode: "list" }
+				if ('value' in appIdParam) {
+					appId = appIdParam.value as string | number;
+				} else {
+					// If it's an object but no value property, it's invalid
+					throw new Error(
+						`Application ID is required and must be a valid number. Received: ${JSON.stringify(appIdParam)}`,
+					);
+				}
+			} else {
+				// It's already a string or number
+				appId = appIdParam;
+			}
+
+			// Convert to string and validate
+			const appIdStr = appId ? String(appId).trim() : '';
+			if (!appIdStr || !/^\d+$/.test(appIdStr)) {
+				throw new Error(
+					`Application ID is required and must be a valid number. Received: ${JSON.stringify(appIdParam)}`,
+				);
+			}
+
+			const returnAll = this.getNodeParameter('returnAll', 0, false) as boolean;
+			const limit = this.getNodeParameter('limit', 0, 50) as number;
+			const fieldFiltersParam = this.getNodeParameter('fieldFilters', 0, {}) as {
+				filter?: Array<{
+					field_id: string | number | { __rl?: boolean; value?: string | number; mode?: string };
+					value: string;
+				}>;
+			};
+			const sortOptions = this.getNodeParameter('sortOptions', 0, {}) as {
+				sort_by?: string;
+				sort_field_id?: string | number | { __rl?: boolean; value?: string | number; mode?: string };
+				sort_desc?: boolean;
+			};
+
+			// Build filter object from field filters
+			// Podio expects filters as an object where keys are field IDs (as strings) and values follow the formats described in
+			// https://developers.podio.com/doc/filters
+			const filters: any = {};
+			if (fieldFiltersParam.filter && Array.isArray(fieldFiltersParam.filter)) {
+				for (const filter of fieldFiltersParam.filter) {
+					// Extract field_id from resourceLocator format
+					let fieldId: string | number;
+					if (typeof filter.field_id === 'object' && filter.field_id !== null && 'value' in filter.field_id) {
+						fieldId = parseInt(String(filter.field_id.value));
+					} else {
+						fieldId = parseInt(String(filter.field_id));
+					}
+
+					const fieldIdStr = String(fieldId);
+
+					// Podio filter API expects the value directly - format depends on field type
+					// (category/state: array, number/date: range object, etc.)
+					// For equals matching, we send the raw value and let Podio handle the format
+					filters[fieldIdStr] = filter.value;
+				}
+			}
+
+			// Build sort options
+			let sortBy: string | undefined;
+			if (sortOptions.sort_by) {
+				if (sortOptions.sort_by === 'field') {
+					// Extract field_id from resourceLocator format
+					if (sortOptions.sort_field_id) {
+						let sortFieldId: string | number;
+						if (
+							typeof sortOptions.sort_field_id === 'object' &&
+							sortOptions.sort_field_id !== null &&
+							'value' in sortOptions.sort_field_id
+						) {
+							sortFieldId = parseInt(String(sortOptions.sort_field_id.value));
+						} else {
+							sortFieldId = parseInt(String(sortOptions.sort_field_id));
+						}
+						sortBy = `field[${sortFieldId}]`;
+					}
+				} else {
+					sortBy = sortOptions.sort_by;
+				}
+			}
+
+			// Build request body - Podio requires filters as an object (even if empty)
+			const body: any = {
+				filters: Object.keys(filters).length > 0 ? filters : {},
+			};
+			
+			// Set pagination limits - limit is required
+			const pageLimit = returnAll ? 500 : limit;
+			body.limit = pageLimit;
+			
+			// Add sort options if provided
+			if (sortBy) {
+				body.sort_by = sortBy;
+			}
+			if (sortOptions.sort_desc !== undefined) {
+				body.sort_desc = sortOptions.sort_desc;
+			}
+
+			let allItems: any[] = [];
+			let offset = 0;
+			let hasMore = true;
+			let baseResponse: any = null;
+
+			// Fetch items with pagination if returnAll is true
+			while (hasMore) {
+				const currentBody = { ...body };
+				if (offset > 0) {
+					currentBody.offset = offset;
+				}
+
+				try {
+					const response = await podioApiRequest.call(this, {
+						method: 'POST',
+						url: `https://api.podio.com/item/app/${appIdStr}/filter/`,
+						body: currentBody,
+					});
+
+					if (!baseResponse && response && typeof response === 'object') {
+						baseResponse = response;
+					}
+
+					// Handle different response formats
+					let items: any[] = [];
+					if (Array.isArray(response)) {
+						items = response;
+					} else if (response && typeof response === 'object') {
+						if (Array.isArray(response.items)) {
+							items = response.items;
+						} else if (Array.isArray(response.data)) {
+							items = response.data;
+						}
+					}
+
+					allItems = allItems.concat(items);
+
+					if (returnAll) {
+						// Continue pagination if we got a full page
+						hasMore = items.length === 500;
+						offset += items.length;
+					} else {
+						hasMore = false;
+					}
+				} catch (error: any) {
+					// Provide more detailed error information from the Podio API response
+					const errorMessage = error.message || String(error);
+					const errorData =
+						error.response?.data ||
+						error.response?.body ||
+						error.body ||
+						error;
+					throw new Error(
+						`Podio API error: ${errorMessage}. Request body: ${JSON.stringify(
+							currentBody,
+						)}. Error details: ${JSON.stringify(errorData)}`,
+					);
+				}
+			}
+
+			// Format and return the full response so metadata is preserved
+			const finalResponse =
+				baseResponse && typeof baseResponse === 'object'
+					? {
+							...baseResponse,
+							items: allItems,
+						}
+					: {
+							items: allItems,
+							total: allItems.length,
+							filtered: allItems.length,
+						};
+
+			returnData.push({ json: finalResponse });
+
+			return [returnData];
+		}
+
 		// Handle get item operation with authentication
 		if (resource === 'item' && operation === 'get') {
 			// Get the itemId parameter - it may be a resourceLocator object
